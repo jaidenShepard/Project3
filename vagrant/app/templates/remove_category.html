@@ -1,0 +1,14 @@
+{% extends 'base.html'%}
+
+{% block page_content %}
+
+    <div class="form">
+        {% for i in categories %}
+            <div class="form-group">
+                <label for="{{ i.name }}">{{ i.name }}</label>
+                <button class="btn btn-sm btn-danger pull-right" name="{{ i.name }}">Delete</button>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}

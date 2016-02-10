@@ -1,5 +1,10 @@
 {% extends "bootstrap/base.html" %}
 
+{% block html_attribs %} lang="en"{% endblock %}
+{% block metas %}
+    {{ super() }}
+    <meta charset="utf-8">
+{% endblock %}
 {% block title %}Catalog{% endblock %}
 
 
@@ -28,7 +33,7 @@
 {% block content %}
 <div class="container">
     {% for message in get_flashed_messages() %}
-    <div class="alert alert-warning">
+    <div class="alert alert-success">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
         {{ message }}
     </div>

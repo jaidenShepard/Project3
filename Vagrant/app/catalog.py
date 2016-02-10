@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, redirect
+from flask import Flask, render_template, url_for, redirect, flash
 from flask.ext.bootstrap import Bootstrap
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -40,6 +40,7 @@ def add_category():
             category = Categories(name=form.name.data)
             session.add(category)
             session.commit()
+            flash('Category added!')
         else:
             form.name.data = ''
         return redirect(url_for('index'))
@@ -48,7 +49,8 @@ def add_category():
 
 @app.route('/category/remove', methods=['Get', 'POST'])
 def remove_category():
-    return render_template('remove_category.html')
+    categories = session.query(Categories)
+    return render_template('remove_category.html', categories=categories)
 
 @app.errorhandler(404)
 def page_not_found(e):

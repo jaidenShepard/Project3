@@ -2,10 +2,6 @@
 
 {% block title %}Catalog{% endblock %}
 
-{% block head %}
-    {{ super() }}
-{% endblock %}
-
 {% block page_content %}
 
     <div class="col-md-12">
@@ -13,8 +9,8 @@
             <p>{{ i.name }}</p>
         {% endfor %}
     </div>
-    <div class="list-group">
-        <li class="list-group-item"><a href="/category/add">Add to Catalog Category</a></li>
-        <li class="list-group-item"><a href="/category/remove">Remove Catalog Category</a> </li>
+    <div class="btn-group" role="group" aria-label="...">
+        <a href="/category/add" type="button" class="btn btn-default">Add Category</a>
+        <a href="/category/remove" type="button" class="btn btn-default">Remove Category</a>
     </div>
 {% endblock %}
