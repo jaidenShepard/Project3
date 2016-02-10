@@ -3,7 +3,7 @@ apt-get -qqy install postgresql python-psycopg2
 apt-get -qqy install python-flask python-sqlalchemy
 apt-get -qqy install python-pip
 pip install flask-wtf
-pip install flask-manage
+pip install flask-script
 pip install flask-bootstrap
 pip install flask-moment
 pip install bleach
