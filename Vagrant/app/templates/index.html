@@ -7,6 +7,12 @@
 {% endblock %}
 
 {% block page_content %}
+
+    <div class="col-md-12">
+        {% for i in categories %}
+            <p>{{ i.name }}</p>
+        {% endfor %}
+    </div>
     <div class="list-group">
         <li class="list-group-item"><a href="/category/add">Add to Catalog Category</a></li>
         <li class="list-group-item"><a href="/category/remove">Remove Catalog Category</a> </li>

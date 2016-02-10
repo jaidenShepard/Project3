@@ -27,7 +27,8 @@ class CategoryForm(Form):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    categories = session.query(Categories)
+    return render_template('index.html', categories=categories)
 
 
 @app.route('/category/add', methods=['GET', 'POST'])
@@ -38,10 +39,16 @@ def add_category():
         if category is None:
             category = Categories(name=form.name.data)
             session.add(category)
+            session.commit()
         else:
             form.name.data = ''
         return redirect(url_for('index'))
     return render_template('add_category.html', form=form)
+
+
+@app.route('/category/remove', methods=['Get', 'POST'])
+def remove_category():
+    return render_template('remove_category.html')
 
 @app.errorhandler(404)
 def page_not_found(e):
