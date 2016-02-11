@@ -1,14 +1,14 @@
 {% extends 'base.html'%}
 
 {% block page_content %}
-
-    <div class="form">
+    <h1 class="page-header">Pick a Category to delete</h1>
+    <form class="form" action="{{ url_for('remove_category', categories=categories) }}" method="post">
         {% for i in categories %}
-            <div class="form-group">
-                <label for="{{ i.name }}">{{ i.name }}</label>
-                <button class="btn btn-sm btn-danger pull-right" name="{{ i.name }}">Delete</button>
+            <div class="form-group radio">
+                <label><input type="radio" class="pull-right" name="category" value="{{ i.id }}">{{ i.name }}</label></input>
             </div>
         {% endfor %}
-    </div>
+        <button type="submit" value="delete">Delete</button>
+    </form>
 
 {% endblock %}

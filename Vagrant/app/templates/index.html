@@ -6,7 +6,7 @@
 
     <div class="col-md-12">
         {% for i in categories %}
-            <p>{{ i.name }}</p>
+            <p><a href="/{{ i.name }}">{{ i.name }}</a></p>
         {% endfor %}
     </div>
     <div class="btn-group" role="group" aria-label="...">
