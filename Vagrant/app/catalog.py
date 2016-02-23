@@ -29,6 +29,12 @@ class ItemForm(Form):
     description = TextAreaField("Description", validators=[DataRequired()])
     submit = SubmitField()
 
+class ItemEdit(Form):
+    def __init__(self, item):
+        name = StringField(item.name, validators=[DataRequired()])
+        description = TextAreaField(item.description, validators=[DataRequired()])
+        submit  =SubmitField()
+
 @app.route('/')
 def index():
     categories = session.query(Categories)
@@ -67,7 +73,6 @@ def remove_category():
 @app.route('/<string:category_name>/add_item', methods=['Get', 'POST'])
 def add_item(category_name):
     category = session.query(Categories).filter_by(name=category_name).first()
-
     form = ItemForm()
     if form.validate_on_submit():
         item = session.query(Items).filter_by(name = form.name.data).first()
@@ -79,6 +84,27 @@ def add_item(category_name):
             return redirect(url_for('category_view', category_name=category_name))
     else:
         return render_template('add_item.html', form=form)
+
+
+@app.route('/<string:category_name>/<string:item_name>', methods=['GET', 'POST'])
+def item_view(category_name, item_name):
+    category = session.query(Categories).filter_by(name=category_name).one()
+    item = session.query(Items). filter_by(category_id=category.id, name=item_name).one()
+    return render_template('item_view.html', item=item, category=category)
+
+
+@app.route('/<string:category_name>/<string:item_name>/edit')
+def item_edit(category_name, item_name):
+    category = session.query(Categories).filter_by(name=category_name).one()
+    item = session.query(Items). filter_by(category_id=category.id, name=item_name).one()
+    form = ItemEdit(item)
+
+    return render_template('item_edit.html', form=form)
+
+
+@app.route('/<string:category_name>/<string:item_name>/delete')
+def item_delete(category_name, item_name):
+    return "working on it"
 
 
 @app.route('/<string:category_name>')

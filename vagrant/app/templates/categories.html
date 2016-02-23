@@ -6,7 +6,7 @@
     <div class="row">
         <div class="col-md-4">
             {% for i in items %}
-                <p>{{ i.name }}</p>
+                <p><a href="{{ url_for('item_view', category_name=category.name, item_name=i.name) }}" >{{ i.name }}</a></p>
             {% endfor %}
         </div>
     </div>
