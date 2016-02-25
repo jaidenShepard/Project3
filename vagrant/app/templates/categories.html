@@ -11,7 +11,7 @@
         </div>
     </div>
     <div class="btn-group" role="group" aria-label="...">
-        <a href="/{{ category.name }}/add_item" type="button" class="btn btn-default">Add Item</a>
-        <a href="/{{ category.name }}/remove_item" type="button" class="btn btn-default">Remove Item</a>
+        <a href="{{ url_for("add_item", category_name=category.name) }}/add_item" type="button" class="btn btn-default">Add Item</a>
+        <a href="{{ url_for("remove_category", category_name=category.name) }}" type="button" class="btn btn-default">Delete category</a>
     </div>
 {% endblock %}

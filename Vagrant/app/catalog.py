@@ -42,7 +42,7 @@ def index():
 
 
 @app.route('/category/add', methods=['GET', 'POST'])
-def add_category():
+def category_add():
     form = CategoryForm()
     if form.validate_on_submit():
         category = session.query(Categories).filter_by(name = form.name.data).first()
@@ -54,21 +54,20 @@ def add_category():
         else:
             form.name.data = ''
         return redirect(url_for('index'))
-    return render_template('add_category.html', form=form)
+    return render_template('category_add.html', form=form)
 
 
-@app.route('/category/remove', methods=['Get', 'POST'])
-def remove_category():
-    categories = session.query(Categories)
+@app.route('/<string:category_name>/remove', methods=['Get', 'POST'])
+def remove_category(category_name):
     if request.method == 'POST':
-        if request.form['name']:
-            deleteItem = session.query(Categories).filter_by(name=request.form['name'])
-            session.delete(deleteItem)
-            session.commit()
-            flash('Category deleted')
-            return redirect(url_for('index'))
+        deleteCategory = session.query(Categories).filter_by(name=category_name).first()
+        session.delete(deleteCategory)
+        session.commit()
+        flash("Category deleted")
+        return redirect(url_for('index'))
     else:
-        return render_template('remove_category.html', categories=categories)
+        return render_template('category_remove.html', category_name=category_name)
+
 
 @app.route('/<string:category_name>/add_item', methods=['Get', 'POST'])
 def add_item(category_name):
@@ -83,7 +82,7 @@ def add_item(category_name):
             flash('Item added')
             return redirect(url_for('category_view', category_name=category_name))
     else:
-        return render_template('add_item.html', form=form)
+        return render_template('item_add.html', form=form)
 
 
 @app.route('/<string:category_name>/<string:item_name>', methods=['GET', 'POST'])
@@ -102,9 +101,17 @@ def item_edit(category_name, item_name):
     return render_template('item_edit.html', form=form)
 
 
-@app.route('/<string:category_name>/<string:item_name>/delete')
-def item_delete(category_name, item_name):
-    return "working on it"
+@app.route('/<string:category_name>/<string:item_name>/delete', methods=['Get', 'Post'])
+def item_remove(category_name, item_name):
+    if request.method == 'POST':
+        category = session.query(Categories).filter_by(name=category_name).one()
+        deleteItem = session.query(Items).filter_by(category_id=category.id).one()
+        session.delete(deleteItem)
+        session.commit()
+        flash("Item deleted")
+        return redirect(url_for('category_view', category_name=category_name))
+    else:
+        return render_template('item_remove.html', category_name=category_name, item_name=item_name)
 
 
 @app.route('/<string:category_name>')

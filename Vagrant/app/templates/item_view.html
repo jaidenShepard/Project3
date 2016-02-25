@@ -9,7 +9,7 @@
             <p>{{ item.description }}</p>
             <div class="btn-group" role="group" aria-label="...">
                 <a href="{{ url_for('item_edit', category_name=category.name, item_name=item.name) }}" type="button" class="btn btn-default">Edit</a>
-                <a href="{{ url_for('item_delete', category_name=category.name, item_name=item.name) }}" type="button" class="btn btn-default">Delete</a>
+                <a href="{{ url_for('item_remove', category_name=category.name, item_name=item.name) }}" type="button" class="btn btn-default">Delete</a>
             </div>
         </div>
     </div>
