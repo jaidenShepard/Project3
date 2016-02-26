@@ -15,6 +15,7 @@ class Categories(Base):
 
     name = Column(String(64), nullable=False)
     id = Column(Integer, primary_key=True)
+    items = relationship('Items', backref='categories', passive_deletes=True)
 
 
 class Items(Base):
@@ -24,8 +25,7 @@ class Items(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(120), nullable=False)
     description = Column(String(240))
-    category_id = Column(Integer, ForeignKey('categories.id'))
-    category = relationship(Categories)
+    category_id = Column(Integer, ForeignKey('categories.id', ondelete='CASCADE'))
 
 
 engine = create_engine('sqlite:///catalog.db')

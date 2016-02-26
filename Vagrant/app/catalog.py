@@ -20,20 +20,23 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
 class CategoryForm(Form):
     name = StringField("What is the category you'd like to add?", validators=[DataRequired()])
     submit = SubmitField('submit')
+
 
 class ItemForm(Form):
     name = StringField("What is the item you'd like to add?", validators=[DataRequired()])
     description = TextAreaField("Description", validators=[DataRequired()])
     submit = SubmitField()
 
+
 class ItemEdit(Form):
-    def __init__(self, item):
-        name = StringField(item.name, validators=[DataRequired()])
-        description = TextAreaField(item.description, validators=[DataRequired()])
-        submit  =SubmitField()
+        name = StringField("name", validators=[DataRequired()])
+        description = TextAreaField("description", validators=[DataRequired()])
+        submit = SubmitField()
+
 
 @app.route('/')
 def index():
@@ -92,13 +95,21 @@ def item_view(category_name, item_name):
     return render_template('item_view.html', item=item, category=category)
 
 
-@app.route('/<string:category_name>/<string:item_name>/edit')
+@app.route('/<string:category_name>/<string:item_name>/edit', methods=['Get', 'POST'])
 def item_edit(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
     item = session.query(Items). filter_by(category_id=category.id, name=item_name).one()
-    form = ItemEdit(item)
-
-    return render_template('item_edit.html', form=form)
+    form = ItemEdit(obj=item)
+    if form.validate_on_submit():
+        form.populate_obj(item)
+        item.name=form.name.data
+        item.description=form.description.data
+        session.add(item)
+        session.commit()
+        flash("Item edited")
+        return redirect(url_for('item_view', category_name=category_name, item_name=item_name))
+    else:
+        return render_template('item_edit.html', category=category, item=item, form=form)
 
 
 @app.route('/<string:category_name>/<string:item_name>/delete', methods=['Get', 'Post'])
