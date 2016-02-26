@@ -7,7 +7,8 @@ from flask.ext.wtf import Form
 from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired
 
-
+from flask import session as login_session
+import random, string
 # Initialises app and extension modules
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'hard to guess string'
@@ -37,6 +38,12 @@ class ItemEdit(Form):
         description = TextAreaField("description", validators=[DataRequired()])
         submit = SubmitField()
 
+
+@app.route('/login')
+def login():
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
+    login_session['state'] = state
+    return render_template('login.html')
 
 @app.route('/')
 def index():
