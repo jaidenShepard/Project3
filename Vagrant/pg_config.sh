@@ -1,7 +1,9 @@
 apt-get -qqy update
 apt-get -qqy install postgresql python-psycopg2
-apt-get -qqy install python-flask python-sqlalchemy
+apt-get -qqy install python-flask==0.9 python-sqlalchemy
 apt-get -qqy install python-pip
+pip install werkzeug==0.8.3
+pip install flask-login==0.1.3
 pip install flask-wtf
 pip install flask-script
 pip install flask-bootstrap
