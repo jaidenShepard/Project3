@@ -32,7 +32,7 @@ class Categories(Base):
 
     name = Column(String(64), nullable=False)
     id = Column(Integer, primary_key=True)
-    # user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
+    #user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
     items = relationship('Items', backref='categories', passive_deletes=True)
 
 
@@ -52,8 +52,9 @@ class Items(Base):
     name = Column(String(120), nullable=False)
     id = Column(Integer, primary_key=True)
     description = Column(String(240))
+    image = Column(String(250))
     category_id = Column(Integer, ForeignKey('categories.id', ondelete='CASCADE'))
-    # user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
+    #user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'))
 
     @property
     def serialize(self):
@@ -62,6 +63,7 @@ class Items(Base):
            'name': self.name,
            'id': self.id,
            'description': self.description,
+           'picture': self.picture,
            'category_id': self.category_id,
            'user_id': self.user_id,
        }

@@ -36,7 +36,7 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
-
+#Forms
 class CategoryForm(Form):
     name = StringField("What is the category you'd like to add?", validators=[DataRequired()])
     submit = SubmitField('submit')
@@ -45,12 +45,14 @@ class CategoryForm(Form):
 class ItemForm(Form):
     name = StringField("What is the item you'd like to add?", validators=[DataRequired()])
     description = TextAreaField("Description", validators=[DataRequired()])
+    image = StringField("Image URL")
     submit = SubmitField()
 
 
 class ItemEdit(Form):
         name = StringField("name", validators=[DataRequired()])
         description = TextAreaField("description", validators=[DataRequired()])
+        image = StringField("Image URL")
         submit = SubmitField()
 
 
@@ -254,7 +256,6 @@ def fbdisconnect():
     del login_session['username']
     del login_session['picture']
     del login_session['email']
-    del login_session['user_id']
     del login_session['facebook_id']
     return  'you have been logged out'
 
@@ -281,10 +282,19 @@ def disconnect():
         flash('You were not logged in to begin with!')
         return  redirect(url_for('index'))
 
+# Index page
 @app.route('/')
 def index():
     categories = session.query(Categories)
     return render_template('index.html', categories=categories)
+
+
+#category related pages
+@app.route('/<string:category_name>')
+def category_view(category_name):
+    category = session.query(Categories).filter_by(name=category_name).one()
+    items = session.query(Items).filter_by(category_id=category.id)
+    return render_template('categories.html', category=category, items=items)
 
 
 @app.route('/category/add', methods=['GET', 'POST'])
@@ -315,14 +325,15 @@ def remove_category(category_name):
         return render_template('category_remove.html', category_name=category_name)
 
 
+# ITEM related pages
 @app.route('/<string:category_name>/add_item', methods=['Get', 'POST'])
 def add_item(category_name):
     category = session.query(Categories).filter_by(name=category_name).first()
     form = ItemForm()
     if form.validate_on_submit():
-        item = session.query(Items).filter_by(name = form.name.data).first()
+        item = session.query(Items).filter_by(name=form.name.data).first()
         if item is None:
-            item = Items(name=form.name.data, description=form.description.data, category_id=category.id)
+            item = Items(name=form.name.data, description=form.description.data, image=form.image.data, category_id=category.id)
             session.add(item)
             session.commit()
             flash('Item added')
@@ -347,6 +358,7 @@ def item_edit(category_name, item_name):
         form.populate_obj(item)
         item.name=form.name.data
         item.description=form.description.data
+        item.description=form.description.data
         session.add(item)
         session.commit()
         flash("Item edited")
@@ -368,13 +380,7 @@ def item_remove(category_name, item_name):
         return render_template('item_remove.html', category_name=category_name, item_name=item_name)
 
 
-@app.route('/<string:category_name>')
-def category_view(category_name):
-    category = session.query(Categories).filter_by(name=category_name).one()
-    items = session.query(Items).filter_by(category_id=category.id)
-    return render_template('categories.html', category=category, items=items)
-
-
+# Error pages
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
@@ -382,6 +388,7 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return render_template('500.html', e=e), 500
+
 
 if __name__ == '__main__':
     app.debug = True
