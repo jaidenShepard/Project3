@@ -19,8 +19,8 @@ import httplib2
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import requests
-from flask.ext.login import login_required
 
+from flask.ext.login import LoginManager
 
 # Initialises app and extension modules
 app = Flask(__name__)
@@ -29,6 +29,11 @@ CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 bootstrap = Bootstrap(app)
 
+#Login stuff
+login_manager = LoginManager(app)
+login_manager.session_protection = 'strong'
+login_manager.login_view = 'auth.login'
+
 
 # Database connection
 engine = create_engine('sqlite:///catalog.db')
@@ -36,18 +41,29 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
+#APIs
+@app.route('/categories/JSON')
+def categoryJSON():
+    categories = session.query(Categories).all()
+    return jsonify(categories = [c.serialize for c in categories])
+
+@app.route('/<string:category_name>/JSON')
+def categoryItemsJSON(category_name):
+    category = session.query(Categories).filter_by(name=category_name).one()
+    items = session.query(Items).filter_by(category_id=category.id).all()
+    return jsonify(items=[i.serialize for i in items])
+
 #Forms
 class CategoryForm(Form):
     name = StringField("What is the category you'd like to add?", validators=[DataRequired()])
     submit = SubmitField('submit')
-
 
 class ItemForm(Form):
     name = StringField("What is the item you'd like to add?", validators=[DataRequired()])
     description = TextAreaField("Description", validators=[DataRequired()])
     image = StringField("Image URL")
     submit = SubmitField()
-
 
 class ItemEdit(Form):
         name = StringField("name", validators=[DataRequired()])
@@ -136,6 +152,11 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
+    # See if a user exists, if it doesn't make a new one
+    user_id = getUserID(login_session['email'])
+    if not user_id:
+        user_id = createUser(login_session)
+    login_session['user_id'] = user_id
 
     output = ''
     output += '<h1>Welcome, '
@@ -195,13 +216,13 @@ def fbconnect():
     data = json.loads(result)
 
     login_session['picture'] = data["data"]["url"]
-    '''
+
     # see if user exists
     user_id = getUserID(login_session['email'])
     if not user_id:
         user_id = createUser(login_session)
     login_session['user_id'] = user_id
-'''
+
     output = ''
     output += '<h1>Welcome, '
     output += login_session['username']
@@ -281,6 +302,31 @@ def disconnect():
     else:
         flash('You were not logged in to begin with!')
         return  redirect(url_for('index'))
+
+
+# User Helper Functions
+
+def createUser(login_session):
+    newUser = User(name=login_session['username'], email=login_session[
+                   'email'], picture=login_session['picture'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+
+def getUserInfo(user_id):
+    user = session.query(User).filter_by(id=user_id).one()
+    return user
+
+
+def getUserID(email):
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
+
 
 # Index page
 @app.route('/')
