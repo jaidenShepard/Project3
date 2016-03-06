@@ -2,12 +2,11 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
-from flask.ext.login import UserMixin
-from . import login_manager
+
 Base = declarative_base()
 
 
-class User(UserMixin, Base):
+class User(Base):
     __tablename__ = 'user'
     name = Column(String(80), nullable=False)
     email = Column(String(128), nullable=False, unique=True)
@@ -66,9 +65,6 @@ class Items(Base):
            'category_id': self.category_id,
        }
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
 
 engine = create_engine('sqlite:///catalog.db')
 Base.metadata.create_all(engine)

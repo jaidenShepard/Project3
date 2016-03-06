@@ -4,7 +4,7 @@ from flask.ext.bootstrap import Bootstrap
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Categories, Items
+from database_setup import Base, User, Categories, Items
 
 from flask.ext.wtf import Form
 from wtforms import StringField, SubmitField, TextAreaField
@@ -20,7 +20,7 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import requests
 
-from flask.ext.login import LoginManager
+from flask.ext.login import LoginManager, login_required
 
 # Initialises app and extension modules
 app = Flask(__name__)
@@ -28,11 +28,6 @@ app.config['SECRET_KEY'] = 'hard to guess string'
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 bootstrap = Bootstrap(app)
-
-#Login stuff
-login_manager = LoginManager(app)
-login_manager.session_protection = 'strong'
-login_manager.login_view = 'auth.login'
 
 
 # Database connection
@@ -286,16 +281,8 @@ def disconnect():
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
             gdisconnect()
-            del login_session['gplus_id']
-            del login_session['credentials']
         if login_session['provider'] == 'facebook':
             fbdisconnect()
-            del login_session['facebook_id']
-
-        del login_session['username']
-        del login_session['picture']
-        del login_session['email']
-        del login_session['user_id']
         del login_session['provider']
         flash("You have successfully been logged out.")
         return  redirect(url_for('index'))
@@ -307,8 +294,9 @@ def disconnect():
 # User Helper Functions
 
 def createUser(login_session):
-    newUser = User(name=login_session['username'], email=login_session[
-                   'email'], picture=login_session['picture'])
+    newUser = User(name=login_session['username'],
+                   email=login_session['email'],
+                   picture=login_session['picture'])
     session.add(newUser)
     session.commit()
     user = session.query(User).filter_by(email=login_session['email']).one()
@@ -320,12 +308,21 @@ def getUserInfo(user_id):
     return user
 
 
+
 def getUserID(email):
     try:
         user = session.query(User).filter_by(email=email).one()
         return user.id
     except:
         return None
+
+#checks if session is logged in
+def loggedIn():
+    return 'username' in login_session
+
+#checks if owner
+def ownerCheck(user_id):
+    return user_id == login_session['user_id']
 
 
 # Index page
@@ -340,16 +337,20 @@ def index():
 def category_view(category_name):
     category = session.query(Categories).filter_by(name=category_name).one()
     items = session.query(Items).filter_by(category_id=category.id)
-    return render_template('categories.html', category=category, items=items)
+    return render_template('categories.html', category=category, items=items,
+                           owner_check=ownerCheck(category.user_id), logged_in=loggedIn())
 
 
 @app.route('/category/add', methods=['GET', 'POST'])
 def category_add():
+    if not loggedIn():
+        return redirect(url_for('login'))
     form = CategoryForm()
     if form.validate_on_submit():
         category = session.query(Categories).filter_by(name = form.name.data).first()
         if category is None:
-            category = Categories(name=form.name.data)
+            category = Categories(name=form.name.data,
+                                  user_id=login_session['user_id'])
             session.add(category)
             session.commit()
             flash('Category added!')
@@ -361,9 +362,11 @@ def category_add():
 
 @app.route('/<string:category_name>/remove', methods=['Get', 'POST'])
 def remove_category(category_name):
+    category = session.query(Categories).filter_by(name=category_name).first()
+    if not loggedIn() or not ownerCheck(category.user_id):
+        return redirect(url_for('login'))
     if request.method == 'POST':
-        deleteCategory = session.query(Categories).filter_by(name=category_name).first()
-        session.delete(deleteCategory)
+        session.delete(category)
         session.commit()
         flash("Category deleted")
         return redirect(url_for('index'))
@@ -374,6 +377,8 @@ def remove_category(category_name):
 # ITEM related pages
 @app.route('/<string:category_name>/add_item', methods=['Get', 'POST'])
 def add_item(category_name):
+    if not loggedIn() or not ownerCheck(category.user_id):
+        return redirect(url_for('login'))
     category = session.query(Categories).filter_by(name=category_name).first()
     form = ItemForm()
     if form.validate_on_submit():
@@ -392,13 +397,16 @@ def add_item(category_name):
 def item_view(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
     item = session.query(Items). filter_by(category_id=category.id, name=item_name).one()
-    return render_template('item_view.html', item=item, category=category)
+    return render_template('item_view.html', item=item, category=category,
+                           logged_in=loggedIn(), owner_check=ownerCheck())
 
 
 @app.route('/<string:category_name>/<string:item_name>/edit', methods=['Get', 'POST'])
 def item_edit(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
     item = session.query(Items). filter_by(category_id=category.id, name=item_name).one()
+    if not loggedIn() or not ownerCheck(item.user_id):
+        return redirect(url_for('login'))
     form = ItemEdit(obj=item)
     if form.validate_on_submit():
         form.populate_obj(item)
@@ -415,10 +423,12 @@ def item_edit(category_name, item_name):
 
 @app.route('/<string:category_name>/<string:item_name>/delete', methods=['Get', 'Post'])
 def item_remove(category_name, item_name):
+    category = session.query(Categories).filter_by(name=category_name).one()
+    item = session.query(Items).filter_by(category_id=category.id).one()
+    if not loggedIn() or not ownerCheck(item.user_id):
+        return redirect(url_for('login'))
     if request.method == 'POST':
-        category = session.query(Categories).filter_by(name=category_name).one()
-        deleteItem = session.query(Items).filter_by(category_id=category.id).one()
-        session.delete(deleteItem)
+        session.delete(item)
         session.commit()
         flash("Item deleted")
         return redirect(url_for('category_view', category_name=category_name))
