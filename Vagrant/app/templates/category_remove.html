@@ -1,7 +1,16 @@
 {% extends 'base.html'%}
 
 {% block page_content %}
-    <h1> Are you sure you want to delete {{ category_name }}</h1>
-    <form action="{{ url_for('remove_category', category_name=category_name)}}" method = 'post'>
-        <input type='submit' value = 'Delete'>
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h1> Are you sure you want to delete {{ category_name }}</h1>
+                <form action="{{ url_for('remove_category', category_name=category_name)}}" method = 'post'>
+                    <input class="btn btn-default" type='submit' value = 'Delete'>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
 {% endblock %}

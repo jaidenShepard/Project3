@@ -1,4 +1,5 @@
-from flask import Flask, render_template, url_for, redirect, flash, request, jsonify
+from flask import Flask, render_template, url_for, redirect, flash, request, \
+    jsonify
 
 from flask.ext.bootstrap import Bootstrap
 
@@ -51,11 +52,13 @@ def categoryItemsJSON(category_name):
 
 #Forms
 class CategoryForm(Form):
-    name = StringField("What is the category you'd like to add?", validators=[DataRequired()])
+    name = StringField("What is the category you'd like to add?",
+                       validators=[DataRequired()])
     submit = SubmitField('submit')
 
 class ItemForm(Form):
-    name = StringField("What is the item you'd like to add?", validators=[DataRequired()])
+    name = StringField("What is the item you'd like to add?",
+                       validators=[DataRequired()])
     description = TextAreaField("Description", validators=[DataRequired()])
     image = StringField("Image URL")
     submit = SubmitField()
@@ -69,7 +72,8 @@ class ItemEdit(Form):
 
 @app.route('/login')
 def login():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for x in range(32))
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
@@ -126,7 +130,8 @@ def gconnect():
     stored_credentials = login_session.get('credentials')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
+        response = \
+            make_response(json.dumps('Current user is already connected.'),
                                  200)
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -200,12 +205,14 @@ def fbconnect():
     login_session['email'] = data["email"]
     login_session['facebook_id'] = data["id"]
 
-    # The token must be stored in the login_session in order to properly logout, let's strip out the information before the equals sign in our token
+    # The token must be stored in the login_session in order to properly logout,
+    #  let's strip out the information before the equals sign in our token
     stored_token = token.split("=")[1]
     login_session['access_token'] = stored_token
 
     # Get user picture
-    url = 'https://graph.facebook.com/v2.5/me/picture?%s&redirect=0&height=200&width=200' % token
+    url = 'https://graph.facebook.com/v2.5/me/picture?%s&redirect=0' \
+          '&height=200&width=200' % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -225,7 +232,8 @@ def fbconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;' \
+              '-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
 
     flash("Now logged in as %s" % login_session['username'])
     return output
@@ -338,16 +346,20 @@ def category_view(category_name):
     category = session.query(Categories).filter_by(name=category_name).one()
     items = session.query(Items).filter_by(category_id=category.id)
     return render_template('categories.html', category=category, items=items,
-                           owner_check=ownerCheck(category.user_id), logged_in=loggedIn())
+                           owner_check=ownerCheck(category.user_id),
+                           logged_in=loggedIn())
 
 
 @app.route('/category/add', methods=['GET', 'POST'])
 def category_add():
     if not loggedIn():
         return redirect(url_for('login'))
+
     form = CategoryForm()
+
     if form.validate_on_submit():
-        category = session.query(Categories).filter_by(name = form.name.data).first()
+        category = session.query(Categories).filter_by(name = form.name.data).\
+            first()
         if category is None:
             category = Categories(name=form.name.data,
                                   user_id=login_session['user_id'])
@@ -363,51 +375,67 @@ def category_add():
 @app.route('/<string:category_name>/remove', methods=['Get', 'POST'])
 def remove_category(category_name):
     category = session.query(Categories).filter_by(name=category_name).first()
+
     if not loggedIn() or not ownerCheck(category.user_id):
         return redirect(url_for('login'))
+
     if request.method == 'POST':
         session.delete(category)
         session.commit()
         flash("Category deleted")
         return redirect(url_for('index'))
     else:
-        return render_template('category_remove.html', category_name=category_name)
+        return render_template('category_remove.html',
+                               category_name=category_name)
 
 
 # ITEM related pages
 @app.route('/<string:category_name>/add_item', methods=['Get', 'POST'])
 def add_item(category_name):
+    category = session.query(Categories).filter_by(name=category_name).first()
+
     if not loggedIn() or not ownerCheck(category.user_id):
         return redirect(url_for('login'))
-    category = session.query(Categories).filter_by(name=category_name).first()
+
     form = ItemForm()
+
     if form.validate_on_submit():
         item = session.query(Items).filter_by(name=form.name.data).first()
         if item is None:
-            item = Items(name=form.name.data, description=form.description.data, image=form.image.data, category_id=category.id)
+            item = Items(name=form.name.data, description=form.description.data,
+                         image=form.image.data, category_id=category.id,
+                         user_id=login_session['user_id'])
             session.add(item)
             session.commit()
             flash('Item added')
-            return redirect(url_for('category_view', category_name=category_name))
+            return redirect(url_for('category_view',
+                                    category_name=category_name))
     else:
         return render_template('item_add.html', form=form)
 
 
-@app.route('/<string:category_name>/<string:item_name>', methods=['GET', 'POST'])
+@app.route('/<string:category_name>/<string:item_name>',
+           methods=['GET', 'POST'])
 def item_view(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
-    item = session.query(Items). filter_by(category_id=category.id, name=item_name).one()
+    item = session.query(Items). filter_by(category_id=category.id,
+                                           name=item_name).one()
     return render_template('item_view.html', item=item, category=category,
-                           logged_in=loggedIn(), owner_check=ownerCheck())
+                           logged_in=loggedIn(), owner_check=ownerCheck(category.user_id))
 
 
-@app.route('/<string:category_name>/<string:item_name>/edit', methods=['Get', 'POST'])
+@app.route('/<string:category_name>/<string:item_name>/edit',
+           methods=['Get', 'POST'])
 def item_edit(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
-    item = session.query(Items). filter_by(category_id=category.id, name=item_name).one()
+    item = session.query(Items). filter_by(category_id=category.id,
+                                           name=item_name).one()
+
     if not loggedIn() or not ownerCheck(item.user_id):
         return redirect(url_for('login'))
+
     form = ItemEdit(obj=item)
+
     if form.validate_on_submit():
         form.populate_obj(item)
         item.name=form.name.data
@@ -416,25 +444,31 @@ def item_edit(category_name, item_name):
         session.add(item)
         session.commit()
         flash("Item edited")
-        return redirect(url_for('item_view', category_name=category_name, item_name=item_name))
+        return redirect(url_for('item_view', category_name=category_name,
+                                item_name=item_name))
     else:
-        return render_template('item_edit.html', category=category, item=item, form=form)
+        return render_template('item_edit.html', category=category, item=item,
+                               form=form)
 
 
-@app.route('/<string:category_name>/<string:item_name>/delete', methods=['Get', 'Post'])
+@app.route('/<string:category_name>/<string:item_name>/delete',
+           methods=['Get', 'Post'])
 def item_remove(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
-    item = session.query(Items).filter_by(category_id=category.id).one()
+    item = session.query(Items).filter_by(category_id=category.id,
+                                          name=item_name).one()
+
     if not loggedIn() or not ownerCheck(item.user_id):
         return redirect(url_for('login'))
+
     if request.method == 'POST':
         session.delete(item)
         session.commit()
         flash("Item deleted")
         return redirect(url_for('category_view', category_name=category_name))
     else:
-        return render_template('item_remove.html', category_name=category_name, item_name=item_name)
-
+        return render_template('item_remove.html', category_name=category_name,
+                               item_name=item_name)
 
 # Error pages
 @app.errorhandler(404)

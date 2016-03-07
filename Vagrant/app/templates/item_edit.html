@@ -3,5 +3,11 @@
 {% block title %}Catalog{% endblock %}
 
 {%  block page_content %}
-    {{ wtf.quick_form(form)}}
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                {{ wtf.quick_form(form)}}
+            </div>
+        </div>
+    </div>
 {% endblock %}

@@ -1,19 +1,22 @@
 {% extends 'base.html' %}
 
 {% block page_content %}
-    <h1>{{ category.name }}</h1>
-
-    <div class="row">
-        <div class="col-md-4">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+        <div class="panel-heading">
+            <h1>{{ category.name }}</h1>
+        </div>
+        <div class="panel-body">
             {% for i in items %}
-                <p><a href="{{ url_for('item_view', category_name=category.name, item_name=i.name) }}" >{{ i.name }}</a></p>
+            <p><a href="{{ url_for('item_view', category_name=category.name, item_name=i.name) }}" >{{ i.name }}</a></p>
             {% endfor %}
+
+            {% if logged_in and owner_check %}
+            <div class="btn-group" role="group" aria-label="...">
+                <a href="{{ url_for("add_item", category_name=category.name) }}" type="button" class="btn btn-default">Add Item</a>
+                <a href="{{ url_for("remove_category", category_name=category.name) }}" type="button" class="btn btn-default">Delete category</a>
+            </div>
+            {% endif %}
         </div>
     </div>
-    {% if logged_in and owner_check %}
-    <div class="btn-group" role="group" aria-label="...">
-        <a href="{{ url_for("add_item", category_name=category.name) }}" type="button" class="btn btn-default">Add Item</a>
-        <a href="{{ url_for("remove_category", category_name=category.name) }}" type="button" class="btn btn-default">Delete category</a>
-    </div>
-    {% endif %}
 {% endblock %}
