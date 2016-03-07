@@ -330,18 +330,22 @@ def loggedIn():
 
 #checks if owner
 def ownerCheck(user_id):
-    return user_id == login_session['user_id']
+    if 'user_id' in login_session:
+        return user_id == login_session['user_id']
+    else:
+        return None
 
 
 # Index page
 @app.route('/')
+@app.route('/categories')
 def index():
     categories = session.query(Categories)
     return render_template('index.html', categories=categories)
 
 
 #category related pages
-@app.route('/<string:category_name>')
+@app.route('/categories/<string:category_name>')
 def category_view(category_name):
     category = session.query(Categories).filter_by(name=category_name).one()
     items = session.query(Items).filter_by(category_id=category.id)
@@ -350,7 +354,7 @@ def category_view(category_name):
                            logged_in=loggedIn())
 
 
-@app.route('/category/add', methods=['GET', 'POST'])
+@app.route('/categories/categories/add', methods=['GET', 'POST'])
 def category_add():
     if not loggedIn():
         return redirect(url_for('login'))
@@ -372,7 +376,7 @@ def category_add():
     return render_template('category_add.html', form=form)
 
 
-@app.route('/<string:category_name>/remove', methods=['Get', 'POST'])
+@app.route('/categories/<string:category_name>/remove', methods=['Get', 'POST'])
 def remove_category(category_name):
     category = session.query(Categories).filter_by(name=category_name).first()
 
@@ -390,7 +394,7 @@ def remove_category(category_name):
 
 
 # ITEM related pages
-@app.route('/<string:category_name>/add_item', methods=['Get', 'POST'])
+@app.route('/categories/<string:category_name>/add_item', methods=['Get', 'POST'])
 def add_item(category_name):
     category = session.query(Categories).filter_by(name=category_name).first()
 
@@ -414,7 +418,7 @@ def add_item(category_name):
         return render_template('item_add.html', form=form)
 
 
-@app.route('/<string:category_name>/<string:item_name>',
+@app.route('/categories/<string:category_name>/<string:item_name>',
            methods=['GET', 'POST'])
 def item_view(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
@@ -424,7 +428,7 @@ def item_view(category_name, item_name):
                            logged_in=loggedIn(), owner_check=ownerCheck(category.user_id))
 
 
-@app.route('/<string:category_name>/<string:item_name>/edit',
+@app.route('/categories/<string:category_name>/<string:item_name>/edit',
            methods=['Get', 'POST'])
 def item_edit(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()
@@ -451,7 +455,7 @@ def item_edit(category_name, item_name):
                                form=form)
 
 
-@app.route('/<string:category_name>/<string:item_name>/delete',
+@app.route('/categories/<string:category_name>/<string:item_name>/delete',
            methods=['Get', 'Post'])
 def item_remove(category_name, item_name):
     category = session.query(Categories).filter_by(name=category_name).one()

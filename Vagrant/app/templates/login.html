@@ -13,6 +13,19 @@
 {% endblock %}
 
 {% block page_content %}
+    <!-- loads facebook javascript sdk-->
+    <script>
+      window.fbAsyncInit = function() {
+          FB.init({
+              appId      : '1028941313810745',
+              cookie     : true,  // enable cookies to allow the server to access
+                              // the session
+              xfbml      : true,  // parse social plugins on this page
+              version    : 'v2.5' // use version 2.5
+          });
+      };
+    </script>
+
     <div class="col-md-12">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -67,23 +80,16 @@
                 <!-- /google login-->
 
                 <!-- facebook login-->
-                <script>
-                    window.fbAsyncInit = function() {
-                        FB.init({
-                            appId      : '218399035176427',
-                            cookie     : true,  // enable cookies to allow the server to access
-                                            // the session
-                            xfbml      : true,  // parse social plugins on this page
-                            version    : 'v2.5' // use version 2.5
-                        });
-                    };
+
+                    <div id="fb-root"></div>
+                    <script>
                     // Load the SDK asynchronously
                     (function(d, s, id) {
-                        var js, fjs = d.getElementsByTagName(s)[0];
-                        if (d.getElementById(id)) return;
-                            js = d.createElement(s); js.id = id;
-                            js.src = "//connect.facebook.net/en_US/sdk.js";
-                            fjs.parentNode.insertBefore(js, fjs);
+                      var js, fjs = d.getElementsByTagName(s)[0];
+                      if (d.getElementById(id)) return;
+                      js = d.createElement(s); js.id = id;
+                      js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.5&appId=218399035176427";
+                      fjs.parentNode.insertBefore(js, fjs);
                     }(document, 'script', 'facebook-jssdk'));
                     // Here we run a very simple test of the Graph API after login is
                     // successful.  See statusChangeCallback() for when this call is made.
@@ -117,10 +123,12 @@
                 </script>
                 <!-- /facebook login-->
                 <fb:login-button scope="public_profile, email" onlogin="sendTokenToServer();">
-                    <a href="javascript:sendTokenToServer()">Sign in</a>
+                <a href="javascript:sendTokenToServer()">Sign In</a>
                 </fb:login-button>
             </div>
+
             <div id="result"></div>
         </div>
     </div>
+
 {% endblock %}
