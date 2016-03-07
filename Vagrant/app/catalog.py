@@ -330,7 +330,10 @@ def loggedIn():
 
 #checks if owner
 def ownerCheck(user_id):
-    return user_id == login_session['user_id']
+    if 'user_id' in login_session:
+        return user_id == login_session['user_id']
+    else:
+        return None
 
 
 # Index page
